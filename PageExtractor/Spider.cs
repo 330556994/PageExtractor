@@ -277,6 +277,7 @@ namespace PageExtractor
         /// <param name="path">保存本地文件的目录</param>
         public void Download(string path)
         {
+            //如果用户输入的 根url 为空 (默认为 http://news.sina.com.cn)
             if (string.IsNullOrEmpty(RootUrl))
             {
                 return;
@@ -306,6 +307,8 @@ namespace PageExtractor
             DispatchWork();
         }
 
+        //检查是否
+
         private void CheckFinish(object param)
         {
             if (_workingSignals.IsFinished())
@@ -334,6 +337,8 @@ namespace PageExtractor
             }
         }
 
+
+        //初始化方法 做一些添加url之前的准备工作
         private void Init()
         {
             _urlsLoaded.Clear();
@@ -496,47 +501,60 @@ namespace PageExtractor
             return links;
         }
 
+        //判断 url 是否存在于已下载集合或未下载集合
         private bool UrlExists(string url)
         {
+            //未下载集合中是否包含url字符串
             bool result = _urlsUnload.ContainsKey(url);
             result |= _urlsLoaded.ContainsKey(url);
             return result;
         }
 
+        //获取可获得页面的url  传入 url  , 未下载的集合 和 已下载的集合
         private bool UrlAvailable(string url)
         {
             if (UrlExists(url))
             {
                 return false;
             }
+            //如果url中包含 .gir .jpg 这些静态资源则返回：
             if (url.Contains(".jpg") || url.Contains(".gif")
                 || url.Contains(".png") || url.Contains(".css")
                 || url.Contains(".js"))
             {
                 return false;
             }
+            //满足上述调节返回true
             return true;
         }
 
+        //添加 url 方法 传入 url 数组和深度
         private void AddUrls(string[] urls, int depth)
         {
+            //如果深度超过了设置的最大深度则返回
             if (depth >= _maxDepth)
             {
                 return;
             }
+            //否则循环数组中的 url
             foreach (string url in urls)
             {
+                //声明新的 url 为当前循环url去除空格
                 string cleanUrl = url.Trim();
+                //获取新的url中包含的空格的位置
                 int end = cleanUrl.IndexOf(' ');
-                if (end > 0)
+                if (end > 0)    //如果空格位置大于0
                 {
-                    cleanUrl = cleanUrl.Substring(0, end);
+                    cleanUrl = cleanUrl.Substring(0, end);  //截取字符串
                 }
                 cleanUrl = cleanUrl.TrimEnd('/');
+                //判断新的url 是否可以打开新页面
                 if (UrlAvailable(cleanUrl))
                 {
+                    //如果 新url 中包含 cleanUrl
                     if (cleanUrl.Contains(_baseUrl))
                     {
+                        //添加 新的url 和深度
                         _urlsUnload.Add(cleanUrl, depth);
                     }
                     else
@@ -547,8 +565,10 @@ namespace PageExtractor
             }
         }
 
+        //保存内容 传入 html  前缀为 用户输入的 浏览器地址
         private void SaveContents(string html, string url)
         {
+            //如果 html 代码为空 则直接返回
             if (string.IsNullOrEmpty(html))
             {
                 return;
